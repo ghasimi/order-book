@@ -19,7 +19,7 @@ def download_raw_orderbook(sym: str, date: str):
 		url = f'https://quote-saver.bycsi.com/orderbook/spot/{sym}/{date}_{sym}_ob200.data.zip'
 		
 		# 2. Landing directory
-		dir = f'blob/raw/orderbook/{sym}/{date}'
+		dir = f'blob/raw/orderbook/{date}'
 
 		# 3. Path
 		fname = url.split('/')[-1]
