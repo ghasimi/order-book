@@ -12,7 +12,7 @@ end = datetime.now(UTC) - timedelta(days=1)
 
 # 2. For the lookback period (days),
 #    default to 1 day if not supplied via command line
-lookback_days = (sys.argv + [1])[1]
+lookback_days = int((sys.argv + [1])[1])
 
 # 3. Download per date and symbol
 ntotal = len(syms) * lookback_days
@@ -25,9 +25,11 @@ for days in range(lookback_days):
 		count += 1
 		print(f'{count}/{ntotal} - downloading orderbook for {date}, {sym}...', end='')
 
-		res, msg = download_raw_orderbook(sym=sym, date=date)	
-		if res:print('OK')
-		if not res:print('ERROR')
-		print(msg)
+		try:
+			fpath = download_raw_orderbook(sym=sym, date=date)
+			print('OK')
+		except Exception as err:
+			print('ERROR')
+			print(err)
 
 		time.sleep(1.0)
