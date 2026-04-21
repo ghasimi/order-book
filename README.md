@@ -81,7 +81,17 @@ Limit Order Book (LOB) tick data processing.
 
 ## Pipeline Architecture
 
-[TODO]
+* `config.py`: Specifies symbpls list and input/output directories, with the option to read from a `config.yml` file
+* `orderbook_bfill.py`: Downloads and parses LOB files and saves clean outputs as `parquet`
+* The diagram shows LOB data strcuture and processing steps:
+
+![Processing of LOB data](assets/diag-ob-data-process.drawio.png)
+
+* For example, to backfill data starting from 7 days ago and for a period of 3 days:
+
+```bash
+python orderbook_bfill.py 7 3
+```
 
 ## Limitations
 
