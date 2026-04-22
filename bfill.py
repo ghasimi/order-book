@@ -2,7 +2,7 @@
 
 Example - Backfill from 4 days ago for 2 days:
 ```
-python orderbook_bfill.py 4 2
+python bfill.py 4 2
 ```
 
 """
