@@ -9,7 +9,7 @@ Limit Order Book (LOB) tick data processing.
 
 ## Progress
 
-* 2026-04-20: `orderbook_bfill.py` downloads and parses historical LOB files and makes them accessible as `parquet`
+* 2026-04-20: `bfill.py` downloads and parses historical LOB files and makes them accessible as `parquet`
 
 ## Definitions
 
@@ -82,16 +82,15 @@ Limit Order Book (LOB) tick data processing.
 ## Pipeline Architecture
 
 * `config.py`: Specifies symbpls list and input/output directories, with the option to read from a `config.yml` file
-* `orderbook_bfill.py`: Downloads and parses LOB files and saves clean outputs as `parquet`
+* `bfill.py`: Downloads and parses LOB files and saves clean outputs as `parquet`
 * The diagram shows LOB data strcuture and processing steps:
 
 ![Processing of LOB data](assets/diag-ob-data-process.drawio.png)
 
-* For example, to backfill data starting from 7 days ago and for a period of 3 days:
+For example:
 
-```bash
-python orderbook_bfill.py 7 3
-```
+* Custom backfill, starting from 7 days ago for a 3-day period: 'python bfill.py 7 3'
+* Daily backfill, by scheduling `python bfill 1 1`
 
 ## Limitations
 
