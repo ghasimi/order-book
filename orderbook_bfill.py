@@ -14,8 +14,8 @@ import zipfile
 from pathlib import Path
 from datetime import datetime, timedelta, UTC
 from data import download_raw_orderbook
-from orderbook_parser import parse_orderbook
-from orderbook_parser import save_parsed_orderbook
+from data import parse_orderbook
+from data import save_parsed_orderbook
 from config import syms, raw_dir, tmp_dir, out_dir
 
 # 1. Create directories if don't exist
