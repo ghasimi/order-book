@@ -10,6 +10,7 @@ Limit Order Book (LOB) tick data processing.
 ## Progress
 
 * 2026-04-20: `bfill.py` downloads and parses historical LOB files and makes them accessible as `parquet`
+* 2026-04-25: benchmarked query performance using Python `polars` and `kdb+/q`
 
 ## Definitions
 
@@ -81,6 +82,8 @@ Limit Order Book (LOB) tick data processing.
 
 ## Pipeline Architecture
 
+## Ingestion
+
 * `config.py`: Specifies symbpls list and input/output directories, with the option to read from a `config.yml` file
 * `bfill.py`: Downloads and parses LOB files and saves clean outputs as `parquet`
 * The diagram shows LOB data strcuture and processing steps:
@@ -89,8 +92,14 @@ Limit Order Book (LOB) tick data processing.
 
 For example:
 
-* Custom backfill, starting from 7 days ago for a 3-day period: 'python bfill.py 7 3'
+* Custom backfill, starting from 7 days ago for a 3-day period: `python bfill.py 7 3`
 * Daily backfill, by scheduling `python bfill 1 1`
+
+### Query
+
+Tick data needs an optimized query engine. To get a sense of performance, I benchmarked `polars` and `kdb+/q` (community edition) where each query rebuilds the orderbook as of a certain timestamp, using `snapshot` and `delta` messages. `polars` directly uses the `parquet` files, while for `kdb+/q` I set up a standard `hdb` (Historical DB).
+
+![polars vs kdb+/q query performance](./assets/polars-vs-kdb-q.png)
 
 ## Limitations
 
