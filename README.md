@@ -12,6 +12,9 @@ Limit Order Book (LOB) tick data processing.
 
 * 2026-04-20: `bfill.py` downloads and parses historical LOB files and makes them accessible as `parquet`
 * 2026-04-25: benchmarked query performance using Python `polars` and `kdb+/q`
+* 2026-04-27: initial check of broker's live LOB vs replay of historical data looks encouraging
+
+![Limit Order Book - Live vs Replay](assets/lob-live-vs-replay.drawio.png)
 
 ## Definitions
 
