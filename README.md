@@ -111,9 +111,4 @@ Tick data needs an optimized query engine. To get a sense of performance, I benc
 
 The focus is on research and development, not optimization. For example, to download files, there is a short pause between HTTP calls to access resources gently. 
 
-## License
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-
-## Disclaimer
-
-This is a personal research and, despite all attempts, there is no guarantee on the correctness or completeness of content. Use of or reference to any name, link, source, vendor, software, company, or instrument (e.g. coin), etc. is NOT endorsement or advice of any kind. Many of such choices are made either randomly or for convenience. For any copyrighted or licensed material or software, consult with the source, author, and terms of service(s). No part of this repo constitutes financial advice or consultancy of any kind, implicitly or explicitly. Seek independent advice before any decision.
+[Footnotes](footnotes.txt)
