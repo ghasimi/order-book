@@ -3,7 +3,7 @@ import re
 import requests
 import polars as pl
 from pathlib import Path
-
+from config import raw_dir
 
 def download_raw_orderbook(sym: str, date: str):
 	"""Downloads the Order Book zip file.
@@ -15,31 +15,32 @@ def download_raw_orderbook(sym: str, date: str):
 	:param date: 'yyyy-mm-dd'
 	:return: path/to/file
 	"""
+	# 1. zip_path
+	zip_fname = f'{date}_{sym}_ob200.data.zip'
 
-	# 1. URL
-	url = f'https://quote-saver.bycsi.com/orderbook/spot/{sym}/{date}_{sym}_ob200.data.zip'
+	# 2. URL
+	url = f'https://quote-saver.bycsi.com/orderbook/spot/{sym}/{zip_fname}'
 	
-	# 2. Landing directory
-	dir = f'blob/raw/orderbook/{date}'
+	# 3. Landing directory
+	dir = f'{raw_dir}/hist/orderbook/spot/{sym}'
 
-	# 3. Path
-	fname = url.split('/')[-1]
-	fpath = os.path.join(dir, fname)
+	# 4. Path
+	zip_path = os.path.join(dir, zip_fname)
 
-	# 4. Download (Streaming)
+	# 5. Download (Streaming)
 	chunk_size = 2**13 # ~8KB
 	with requests.get(url, stream=True) as res:
 		res.raise_for_status()
 
-		# 5. Create directory
+		# 6. Create directory
 		Path(dir).mkdir(parents=True, exist_ok=True)
 
-		# 6. Save
-		with open(fpath, 'wb') as f:
+		# 7. Save
+		with open(zip_path, 'wb') as f:
 			for chunk in res.iter_content(chunk_size=chunk_size):
 				_ = f.write(chunk)
 
-	return fpath
+	return zip_path
 	
 
 def parse_orderbook(fpath: str):
@@ -48,7 +49,7 @@ def parse_orderbook(fpath: str):
 	`data` column is a struct, containing bids (`b`) and asks (`a`)
 	  as Nx2 arrays of price (p) and quantity (q). 
 
-	:param fpath: e.g., 'blob/raw/orderbook/2026-04-04_BTCUSDT_ob200.data'
+	:param fpath: path/to/unzip-file like 'blob/tmp/2026-04-27_BTCUSDT_ob200.data'
 	:return: LazyFrame of clean orderbook
 	"""
 	# 1. Raw data
@@ -103,7 +104,7 @@ def save_parsed_orderbook(ob: pl.LazyFrame, out_dir: str):
 	)
 
 	# 3. Save
-	path = f'{out_dir}/year={year}/month={month}/day={day}/sym={sym}'
+	path = f'{out_dir}/hist/orderbook/spot/sym={sym}/year={year}/month={month}/day={day}'
 	Path(path).mkdir(parents=True, exist_ok=True)
 	fname = fpath.split('/')[-1] + '.parquet'
 	ob.sink_parquet(f'{path}/{fname}', mkdir=True)

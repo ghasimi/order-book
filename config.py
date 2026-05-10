@@ -15,11 +15,11 @@ with open('config.yml', 'r') as f:
 syms = conf.get('syms', [])
 
 # Raw data directory
-raw_dir = conf.get('raw_dir', 'blob/raw/orderbook')
+raw_dir = conf.get('raw_dir', 'blob/raw')
 
 # Temp (staging) directory
-tmp_dir = conf.get('tmp_dir', 'blob/tmp/orderbook')
+tmp_dir = conf.get('tmp_dir', 'blob/tmp')
 
 # Output directory
-out_dir = conf.get('out_dir', 'blob/out/orderbook')
+out_dir = conf.get('out_dir', 'blob/out')
 
