@@ -2,8 +2,23 @@ import os
 import re
 import requests
 import polars as pl
+from polars import Schema, String, Int64, List, Struct
 from pathlib import Path
 from config import raw_dir
+
+orderbook_schema = Schema([('topic', String),
+	('ts', Int64),
+	('type', String),
+	('id', String),
+	('data',
+		Struct({
+		's': String, 
+		'b': List(List(String)), 
+		'a': List(List(String)), 
+		'u': Int64, 
+		'seq': Int64})),
+	('cts', Int64)])
+
 
 def download_raw_orderbook(sym: str, date: str):
 	"""Downloads the Order Book zip file.
@@ -52,26 +67,51 @@ def parse_orderbook(fpath: str):
 	:param fpath: path/to/unzip-file like 'blob/tmp/2026-04-27_BTCUSDT_ob200.data'
 	:return: LazyFrame of clean orderbook
 	"""
+	
 	# 1. Raw data
-	ob = pl.scan_ndjson(fpath)
+	ob = pl.scan_ndjson(fpath, schema=orderbook_schema)
 
 	# 2. Bids
-	bids = ob.with_columns(
+	bids = (
+		ob.with_columns(
 			b = pl.col('data').struct.field('b'),
 			side=pl.lit('b'),
-	).explode('b').with_columns(
-		p = pl.col('b').list.get(0).cast(pl.Float64),
-		q = pl.col('b').list.get(1).cast(pl.Float64),
-	).drop(['data', 'b'])
+		)
+		.explode('b')
+		.with_columns(
+			b = pl.col('b').fill_null([])
+		)	
+		.filter(
+			pl.col('b').list.len() > 0
+		)	
+		.with_columns(
+			p = pl.col('b').list.get(0).cast(pl.Float64),
+			q = pl.col('b').list.get(1).cast(pl.Float64),
+		)
+		.drop(['data', 'b'])
+	)
+
 
 	# 3. Asks
-	asks = ob.with_columns(
-			a = pl.col('data').struct.field('a'),
-			side=pl.lit('a')
-	).explode('a').with_columns(
-		p = pl.col('a').list.get(0).cast(pl.Float64),
-		q = pl.col('a').list.get(1).cast(pl.Float64),
-	).drop(['data', 'a'])
+	asks = (
+		ob.with_columns(
+				a = pl.col('data').struct.field('a'),
+				side=pl.lit('a')
+		)
+		.explode('a')
+		.with_columns(
+			a = pl.col('a').fill_null([])
+		)
+		.filter(
+			pl.col('a').list.len() > 0
+		)
+		.with_columns(
+			p = pl.col('a').list.get(0).cast(pl.Float64),
+			q = pl.col('a').list.get(1).cast(pl.Float64),
+		)
+		.drop(['data', 'a'])
+		
+	)
 
 	# 4. Stacked
 	ob = pl.concat([bids, asks])\
