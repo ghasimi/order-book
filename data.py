@@ -4,7 +4,8 @@ import requests
 import polars as pl
 from polars import Schema, String, Int64, List, Struct
 from pathlib import Path
-from config import raw_dir
+from config import raw_dir, out_dir
+from enum import Enum
 
 orderbook_schema = Schema([('topic', String),
 	('ts', Int64),
@@ -20,7 +21,21 @@ orderbook_schema = Schema([('topic', String),
 	('cts', Int64)])
 
 
-def download_raw_orderbook(sym: str, date: str):
+class Product(Enum):
+	SPOT = 1
+	LINEAR = 2
+	OPTION = 3
+
+def get_zip_fname(sym: str, date: str, product=Product):
+	"""Downloadble archive's name"""
+	if product.name == 'OPTION':
+		coin = sym.replace('USDT','')
+		return f'{date}_{coin}_USDT.ob25.zip'
+	
+	elif product.name in ['SPOT', 'LINEAR']:
+		return f'{date}_{sym}_ob200.data.zip' 		
+
+def download_raw_orderbook(sym: str, date: str, product=Product.SPOT):
 	"""Downloads the Order Book zip file.
 
 	Sample filename:
@@ -28,16 +43,23 @@ def download_raw_orderbook(sym: str, date: str):
 	
 	:param sym: 'BTCUSDT'
 	:param date: 'yyyy-mm-dd'
+	:param product: Product Enum (SPOT, LINEAR, OPTION)
 	:return: path/to/file
 	"""
-	# 1. zip_path
-	zip_fname = f'{date}_{sym}_ob200.data.zip'
 
+	# 1. Info for URL and landing path
+	zip_fname = get_zip_fname(sym, date, product)
+	pname = product.name.lower()
+	
 	# 2. URL
-	url = f'https://quote-saver.bycsi.com/orderbook/spot/{sym}/{zip_fname}'
+	if product == Product.OPTION:
+		coin = sym.replace('USDT','')
+		url = f'https://quote-saver.bycsi.com/orderbook/{pname}/{coin}/{zip_fname}'
+	else:
+		url = f'https://quote-saver.bycsi.com/orderbook/{pname}/{sym}/{zip_fname}'
 	
 	# 3. Landing directory
-	dir = f'{raw_dir}/hist/orderbook/spot/{sym}'
+	dir = f'{raw_dir}/hist/orderbook/{pname}/{sym}'
 
 	# 4. Path
 	zip_path = os.path.join(dir, zip_fname)
@@ -122,30 +144,21 @@ def parse_orderbook(fpath: str):
 	return ob
 
 
-def save_parsed_orderbook(ob: pl.LazyFrame, out_dir: str):
+def save_parsed_orderbook(ob: pl.LazyFrame, sym:str, date:str, product=Product):
 	"""Saves a parsed orderbook in partiotionaed parquet format.
 
 	:param ob: orderbook (LazyFrame) from parse_orderbook()
-	:param out_dir: target directory for parquet files
-	:return: the enriched orderbook
+	:return: path/to/parquet
 	"""
-	
-	# 1. Info from fpath
-	fpath = ob.select('fpath').head(1).collect().item()
-	sym = re.findall(r'\_(.*)\_ob200', fpath)[0]
-	date = re.findall(r'\d{4}-\d{2}-\d{2}', fpath)[0]
+
+	# 1. path 
+	zip_fname = get_zip_fname(sym, date, product)
+	fname = zip_fname.replace('.zip', '.parquet')
+	pname = product.name.lower()
 	year, month, day =  date.split('-')
+	dir_ = f'{out_dir}/hist/orderbook/{pname}/sym={sym}/year={year}/month={month}/day={day}'
+	path = f'{dir_}/{fname}'
 
-	# 2. Enrich
-	ob = (ob
-		.rename({'ts':'t',})		
-		.with_columns(dt=pl.from_epoch('t', time_unit='ms'))
-		.with_row_index('rn', offset=1)
-	)
-
-	# 3. Save
-	path = f'{out_dir}/hist/orderbook/spot/sym={sym}/year={year}/month={month}/day={day}'
-	Path(path).mkdir(parents=True, exist_ok=True)
-	fname = fpath.split('/')[-1] + '.parquet'
-	ob.sink_parquet(f'{path}/{fname}', mkdir=True)
-	return ob
+	# 2. Save
+	ob.sink_parquet(path, mkdir=True)
+	return path

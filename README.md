@@ -13,6 +13,7 @@ Limit Order Book (LOB) tick data processing.
 * 2026-04-20: `bfill.py` downloads and parses historical LOB files and makes them accessible as `parquet`
 * 2026-04-25: benchmarked query performance using Python `polars` and `kdb+/q`
 * 2026-04-27: initial check of broker's live LOB vs replay of historical data looks encouraging
+* 2026-05-10: backfill for `option` and `linear` (futures margined in stablecoin) in addition to `spot`
 
 ![Limit Order Book - Live vs Replay](assets/lob-live-vs-replay.png)
 
@@ -96,10 +97,10 @@ Limit Order Book (LOB) tick data processing.
 
 ![Processing of LOB data](assets/diag-ob-data-process.drawio.png)
 
-For example:
+Example for `spot`:
 
-* Custom backfill, starting from 7 days ago for a 3-day period: `python bfill.py 7 3`
-* Daily backfill, by scheduling `python bfill 1 1`
+* Custom backfill, starting from 7 days ago for a 3-day period: `python bfill.py 7 3 spot`
+* Daily backfill, by scheduling `python bfill 1 1 spot`
 
 ### Query
 
